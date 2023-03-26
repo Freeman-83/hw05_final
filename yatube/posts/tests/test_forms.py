@@ -145,7 +145,7 @@ class CommentCreateFormTests(TestCase):
             follow=True
         )
         comment = Comment.objects.first()
-        response = CommentCreateFormTests.guest_client.get(
+        response = CommentCreateFormTests.auth_client.get(
             reverse('posts:post_detail', kwargs={'post_id': self.post.id})
         )
         obj = response.context['comments']

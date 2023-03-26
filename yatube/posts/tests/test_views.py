@@ -8,7 +8,7 @@ from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
-from ..models import Group, Post
+from ..models import Follow, Group, Post
 
 COUNT_POSTS: int = 15
 POSTS_ON_LAST_PAGE: int = COUNT_POSTS % settings.POSTS_ON_PAGE
@@ -258,60 +258,46 @@ class FollowCreateTest(TestCase):
 
     def test_correct_follow_unfollow_work(self):
         """Проверка подписки/отписки."""
-        response_before_follow = FollowCreateTest.auth_client_1.get(
-            reverse('posts:follow_index')
-        )
-        FollowCreateTest.auth_client_1.post(
+        FollowCreateTest.auth_client_1.get(
             reverse('posts:profile_follow', kwargs={'username': self.author})
         )
-        response_after_follow = FollowCreateTest.auth_client_1.get(
-            reverse('posts:follow_index')
+        self.assertTrue(
+            Follow.objects.filter(user=FollowCreateTest.user_1,
+                                  author=FollowCreateTest.author).exists(),
+            'Ошибка подписки на автора'
         )
-        self.assertNotEqual(response_before_follow.content,
-                            response_after_follow.content,
-                            'Ошибка подписки на автора')
 
-        FollowCreateTest.auth_client_1.post(
+        FollowCreateTest.auth_client_1.get(
             reverse('posts:profile_unfollow', kwargs={'username': self.author})
         )
-        response_after_unfollow = FollowCreateTest.auth_client_1.get(
-            reverse('posts:follow_index')
+        self.assertFalse(
+            Follow.objects.filter(user=FollowCreateTest.user_1,
+                                  author=FollowCreateTest.author).exists(),
+            'Ошибка отписки на автора'
         )
-        self.assertEqual(response_before_follow.content,
-                         response_after_unfollow.content,
-                         'Ошибка отписки от автора')
 
     def test_exist_post_in_page_followers(self):
         """
         Проверка появления записи у подписчиков
         и отсутствия ее у остальных пользователей.
         """
-        FollowCreateTest.auth_client_1.post(
+        FollowCreateTest.auth_client_1.get(
             reverse('posts:profile_follow', kwargs={'username': self.author})
         )
-        response_before_new_post_client_1 = FollowCreateTest.auth_client_1.get(
+        response_client_1 = FollowCreateTest.auth_client_1.get(
             reverse('posts:follow_index')
         )
-        response_before_new_post_client_2 = FollowCreateTest.auth_client_2.get(
-            reverse('posts:follow_index')
-        )
-
-        Post.objects.create(text='Тестовый текст 2',
-                            author=FollowCreateTest.author)
-
-        response_after_new_post_client_1 = FollowCreateTest.auth_client_1.get(
-            reverse('posts:follow_index')
-        )
-        response_after_new_post_client_2 = FollowCreateTest.auth_client_2.get(
+        response_client_2 = FollowCreateTest.auth_client_2.get(
             reverse('posts:follow_index')
         )
 
-        self.assertNotEqual(response_before_new_post_client_1.content,
-                            response_after_new_post_client_1.content,
-                            'Новый пост автора в листе подписок не появился')
-        self.assertEqual(response_before_new_post_client_2.content,
-                         response_after_new_post_client_2.content,
-                         'Запись размещена на неожидаемой странице')
+        self.assertIn(self.post,
+                      response_client_1.context['page_obj'],
+                      'Новый пост должен находиться в листе подписок')
+
+        self.assertNotIn(self.post,
+                         response_client_2.context['page_obj'],
+                         'Ошибочное размещение записи')
 
 
 class PaginatorViewsTest(TestCase):

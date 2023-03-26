@@ -92,6 +92,8 @@ class PostURLTests(TestCase):
             f'/posts/{self.post.id}/': 'posts/post_detail.html',
             '/create/': 'posts/create_post.html',
             f'/posts/{self.post.id}/edit/': 'posts/create_post.html',
+            '/follow/': 'posts/follow.html',
+            '/unexisting_page/': 'core/404.html',
         }
 
         for url_address, template in url_address_template.items():
