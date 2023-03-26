@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% load user_filters %}
+
+{% load thumbnail %}
+
+{% block title %}
+  {{ post_choice.text|truncatechars:30 }}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+  <aside class="col-12 col-md-3">
+    <ul class="list-group list-group-flush">
+      <li class="list-group-item">
+        Дата публикации: {{ post_choice.pub_date|date:"d E Y" }} 
+      </li>
+      {% if post_choice.group %}
+        <li class="list-group-item">
+          Группа: {{ post_choice.group }}
+          <br>
+            <a href="{% url 'posts:group_list' post_choice.group.slug %}">
+            все записи группы
+            </a>
+          </br>
+        </li>
+      {% endif %}
+      <li class="list-group-item">
+        Автор: {{ post_choice.author.get_full_name }}
+      </li>
+      <li class="list-group-item d-flex justify-content-between align-items-center">
+        Всего постов автора: <span >{{ post_choice.author.posts.count }}</span>
+      </li>
+      <li class="list-group-item">
+        <a href="{% url 'posts:profile' post_choice.author %}">
+          все посты пользователя
+        </a>
+      </li>      
+    </ul>    
+  </aside>
+  
+  <article class="col-12 col-md-9">
+    {% thumbnail post_choice.image "960x339" crop="center" upscale=True as im %}
+      <img class="card-img my-2" src="{{ im.url }}">
+    {% endthumbnail %}
+
+    <p>
+      {{ post_choice.text }}
+    </p>
+
+    {% if post_choice.author == user %}
+      <a class="btn btn-primary" href="{% url 'posts:post_edit' post_choice.pk %}">
+        редактировать запись
+      </a>
+    {% endif %}
+    {% include 'posts/includes/comment.html' %}
+{% endblock %} 
+    
