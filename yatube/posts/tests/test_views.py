@@ -212,23 +212,26 @@ class PostPagesTests(TestCase):
                          ' должна содержать записи только этой группы')
 
     def test_cache(self):
-        """Проверка корректного кэширования данных главной страницы"""
-        first_response = PostPagesTests.auth_client.get(reverse('posts:index'))
-        Post.objects.get(pk=self.post.id).delete()
-        second_response = PostPagesTests.auth_client.get(
+        """Проверка корректного кэширования данных главной страницы."""
+        response_before_del = PostPagesTests.auth_client.get(
             reverse('posts:index')
         )
+        response_before_del.context['page_obj'][0].delete()
 
-        self.assertEqual(first_response.content,
-                         second_response.content,
+        response_after_del = PostPagesTests.auth_client.get(
+            reverse('posts:index')
+        )
+        self.assertEqual(response_before_del.content,
+                         response_after_del.content,
                          'Ошибка кэша')
 
         cache.clear()
 
-        third_response = PostPagesTests.auth_client.get(reverse('posts:index'))
-
-        self.assertNotEqual(first_response.content,
-                            third_response.content,
+        response_after_cache_clear = PostPagesTests.auth_client.get(
+            reverse('posts:index')
+        )
+        self.assertNotEqual(response_before_del.content,
+                            response_after_cache_clear.content,
                             'Ошибка удаления записи')
 
 
@@ -256,8 +259,8 @@ class FollowCreateTest(TestCase):
             text='Тестовый текст',
             author=FollowCreateTest.author)
 
-    def test_correct_follow_unfollow_work(self):
-        """Проверка подписки/отписки."""
+    def test_correct_follow_work(self):
+        """Проверка подписки на автора."""
         FollowCreateTest.auth_client_1.get(
             reverse('posts:profile_follow', kwargs={'username': self.author})
         )
@@ -267,13 +270,15 @@ class FollowCreateTest(TestCase):
             'Ошибка подписки на автора'
         )
 
+    def test_correct_unfollow_work(self):
+        """Проверка отписки от автора."""
         FollowCreateTest.auth_client_1.get(
             reverse('posts:profile_unfollow', kwargs={'username': self.author})
         )
         self.assertFalse(
             Follow.objects.filter(user=FollowCreateTest.user_1,
                                   author=FollowCreateTest.author).exists(),
-            'Ошибка отписки на автора'
+            'Ошибка отписки от автора'
         )
 
     def test_exist_post_in_page_followers(self):

@@ -104,7 +104,9 @@ def add_comment(request, post_id):
 @login_required
 def follow_index(request):
     template = 'posts/follow.html'
-    posts = Post.objects.filter(author__following__user=request.user)
+    posts = Post.objects.select_related('author').filter(
+        author__following__user=request.user
+    )
     page_obj = get_paginator(request, posts)
     context = {
         'title': 'Мои подписки',
