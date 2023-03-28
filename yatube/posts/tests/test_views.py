@@ -261,34 +261,55 @@ class FollowCreateTest(TestCase):
 
     def test_correct_follow_work(self):
         """Проверка подписки на автора."""
+        count_before_follow = Follow.objects.filter(
+            user=FollowCreateTest.user_1
+        ).count()
+
         FollowCreateTest.auth_client_1.get(
             reverse('posts:profile_follow', kwargs={'username': self.author})
         )
-        self.assertTrue(
-            Follow.objects.filter(user=FollowCreateTest.user_1,
-                                  author=FollowCreateTest.author).exists(),
-            'Ошибка подписки на автора'
-        )
+
+        count_after_follow = Follow.objects.filter(
+            user=FollowCreateTest.user_1
+        ).count()
+
+        self.assertEqual(count_before_follow,
+                         count_after_follow - 1,
+                         'Ошибка подписки на автора')
 
     def test_correct_unfollow_work(self):
         """Проверка отписки от автора."""
+        Follow.objects.get_or_create(
+            user=FollowCreateTest.user_1,
+            author=FollowCreateTest.author
+        )
+
+        count_before_unfollow = Follow.objects.filter(
+            user=FollowCreateTest.user_1
+        ).count()
+
         FollowCreateTest.auth_client_1.get(
             reverse('posts:profile_unfollow', kwargs={'username': self.author})
         )
-        self.assertFalse(
-            Follow.objects.filter(user=FollowCreateTest.user_1,
-                                  author=FollowCreateTest.author).exists(),
-            'Ошибка отписки от автора'
-        )
+
+        count_after_unfollow = Follow.objects.filter(
+            user=FollowCreateTest.user_1
+        ).count()
+
+        self.assertEqual(count_before_unfollow,
+                         count_after_unfollow + 1,
+                         'Ошибка отписки от автора')
 
     def test_exist_post_in_page_followers(self):
         """
         Проверка появления записи у подписчиков
         и отсутствия ее у остальных пользователей.
         """
-        FollowCreateTest.auth_client_1.get(
-            reverse('posts:profile_follow', kwargs={'username': self.author})
+        Follow.objects.get_or_create(
+            user=FollowCreateTest.user_1,
+            author=FollowCreateTest.author
         )
+
         response_client_1 = FollowCreateTest.auth_client_1.get(
             reverse('posts:follow_index')
         )
