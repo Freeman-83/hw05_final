@@ -1,10 +1,13 @@
 {% extends 'base.html' %}
 
+{% load cache %}
+
 {% block title %}
   {{ title }}
 {% endblock %}
 
 {% block content %}
+{% cache 20 index_page page_obj.number %}
   <div class="container py-5">
     {% include 'posts/includes/switcher.html' %}
     <h1>{{ title }}</h1>
@@ -21,5 +24,7 @@
         {% endfor %}
       {% include 'posts/includes/paginator.html' %}
   </div>
+{% endcache %}
 {% endblock %}
+
    

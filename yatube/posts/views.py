@@ -6,7 +6,6 @@ from .forms import CommentForm, PostForm
 from utils.paginator import get_paginator
 
 
-@cache_page(20, key_prefix='index_page')
 def index(request):
     template = 'posts/index.html'
     posts = Post.objects.select_related('author', 'group').all()
