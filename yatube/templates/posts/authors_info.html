@@ -5,15 +5,31 @@
 {% endblock %}
 
 {% block content %}
+
   <div class="container py-5">
+    <h4>Все авторы</h4>
     {% for author in authors %}
-
-    <p>
-      <a href="{% url 'posts:profile' author.username %}">
-        {{ author.username }}
-      </a>
-    </p>
-
+      <p>
+        <a href="{% url 'posts:profile' author.username %}">
+          {{ author.get_full_name }}
+        </a>
+      </p>
     {% endfor %}
   </div>
+  
+  <div class="container py-5">
+    <h4>Избранные авторы</h4>
+    
+      {% for author in authors %}
+        {% if author.following.user == request.user %}
+          <p>
+            <a href="{% url 'posts:profile' author.username %}">
+              {{ author.get_full_name }}
+            </a>
+          </p>
+        {% endif %}
+      {% endfor %}
+    
+  </div>
+
 {% endblock %}

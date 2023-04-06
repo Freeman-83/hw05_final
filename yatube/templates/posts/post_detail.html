@@ -49,10 +49,10 @@
     </p>
 
     {% if post_choice.author == user %}
-      <a class="btn btn-primary" href="{% url 'posts:post_edit' post_choice.pk %}">
+      <a class="btn btn-sm btn-primary" href="{% url 'posts:post_edit' post_choice.pk %}">
         редактировать запись
       </a>
-      <a class="btn btn-danger" href="{% url 'posts:post_delete' post_choice.pk %}">
+      <a class="btn btn-sm btn-danger" href="{% url 'posts:post_delete' post_choice.pk %}">
         удалить запись
       </a>
     {% endif %}
