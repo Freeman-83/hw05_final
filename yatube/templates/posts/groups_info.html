@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {{ title }}
+{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    {% for group in groups %}
+
+    <p>
+      <a href="{% url 'posts:group_list' group.slug %}">
+        {{ group.title }}
+      </a>
+    </p>
+
+    {% endfor %}
+  </div>
+{% endblock %}

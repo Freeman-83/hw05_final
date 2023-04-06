@@ -30,6 +30,26 @@ def group_posts(request, slug):
     return render(request, template, context)
 
 
+def groups_info(request):
+    template = 'posts/groups_info.html'
+    groups = Group.objects.all()
+    context = {
+        'title': 'Все группы',
+        'groups': groups,
+    }
+    return render(request, template, context)
+
+
+def authors_info(request):
+    template = 'posts/authors_info.html'
+    authors = User.objects.all()
+    context = {
+        'title': 'Все авторы',
+        'authors': authors,
+    }
+    return render(request, template, context)
+
+
 def profile(request, username):
     template = 'posts/profile.html'
     author = get_object_or_404(User, username=username)
@@ -86,6 +106,15 @@ def post_edit(request, post_id):
     return render(request,
                   template,
                   {'form': form, 'post': post, 'is_edit': True})
+
+
+@login_required
+def post_delete(request, post_id):
+    post = get_object_or_404(Post, pk=post_id)
+    if request.user != post.author:
+        return redirect('posts:post_detail', post_id)
+    post.delete()
+    return redirect('posts:profile', post.author)
 
 
 @login_required

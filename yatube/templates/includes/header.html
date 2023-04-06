@@ -11,40 +11,40 @@
     <ul class="nav nav-pills">
 
       {% with request.resolver_match.view_name as view_name %}
-      
-      <li class="nav-item"> 
-        <a class="nav-link 
-          {% if view_name == 'about:author' %}active{% endif %}"
-            href="{% url 'about:author' %}">
-            Об авторе
-        </a>
 
-      </li>
       <li class="nav-item">
-        <a class="nav-link 
-          {% if view_name == 'about:tech' %}active{% endif %}"
-            href="{% url 'about:tech' %}">
-            Технологии
+        <a class="nav-link
+          {% if view_name == 'posts:index' %}active{% endif %}"
+            href="{% url 'posts:index' %}">
+            Главная
         </a>
       </li>
 
+      <li class="nav-item">
+        <a class="nav-link
+          {% if view_name == 'posts:authors_info' %}active{% endif %}"
+            href="{% url 'posts:authors_info' %}">
+            Авторы
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a class="nav-link
+          {% if view_name == 'posts:groups_info' %}active{% endif %}"
+            href="{% url 'posts:groups_info' %}">
+            Группы
+        </a>
+      </li>
+      
       {% if user.is_authenticated %}
         
-          <li class="nav-item"> 
-            <a class="nav-link            
-              {% if view_name == 'posts:profile' and request.resolver_match.kwargs.username == user.username %}
-                active
-              {% endif %}"
-                href="{% url 'posts:profile' user %}">
-                Мои записи
-            </a>
-          </li>
-
         <li class="nav-item"> 
-          <a class="nav-link 
-            {% if view_name == 'posts:post_create' %}active{% endif %}"
-              href="{% url 'posts:post_create' %}">
-              Новая запись
+          <a class="nav-link            
+            {% if view_name == 'posts:profile' and request.resolver_match.kwargs.username == user.username %}
+              active
+            {% endif %}"
+              href="{% url 'posts:profile' user %}">
+              Мои записи
           </a>
         </li>
 

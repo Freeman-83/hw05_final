@@ -45,12 +45,15 @@ class PostURLTests(TestCase):
              ['/create/', HTTPStatus.FOUND],
              [f'/posts/{self.post.id}/edit/', HTTPStatus.FOUND],
              [f'/posts/{self.post.id}/comment/', HTTPStatus.FOUND],
+             [f'/posts/{self.post.id}/delete/', HTTPStatus.FOUND],
              ['/unexisting_page/', HTTPStatus.NOT_FOUND],),
             PostURLTests.auth_client:
             (['/create/', HTTPStatus.OK],
-             [f'/posts/{self.post.id}/edit/', HTTPStatus.FOUND],),
+             [f'/posts/{self.post.id}/edit/', HTTPStatus.FOUND],
+             [f'/posts/{self.post.id}/delete/', HTTPStatus.FOUND],),
             PostURLTests.auth_client_author:
-            ([f'/posts/{self.post.id}/edit/', HTTPStatus.OK],)
+            ([f'/posts/{self.post.id}/edit/', HTTPStatus.OK],
+             [f'/posts/{self.post.id}/delete/', HTTPStatus.FOUND],)
         }
 
         for client, url_response in users_urls_status.items():
@@ -72,7 +75,8 @@ class PostURLTests(TestCase):
         urls_redirect = [
             '/create/',
             f'/posts/{self.post.id}/edit/',
-            f'/posts/{self.post.id}/comment/'
+            f'/posts/{self.post.id}/comment/',
+            f'/posts/{self.post.id}/delete/',
         ]
 
         for url in urls_redirect:

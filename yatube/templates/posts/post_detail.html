@@ -52,7 +52,10 @@
       <a class="btn btn-primary" href="{% url 'posts:post_edit' post_choice.pk %}">
         редактировать запись
       </a>
+      <a class="btn btn-danger" href="{% url 'posts:post_delete' post_choice.pk %}">
+        удалить запись
+      </a>
     {% endif %}
     {% include 'posts/includes/comment.html' %}
-{% endblock %} 
+{% endblock %}
     

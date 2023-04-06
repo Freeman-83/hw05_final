@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {{ title }}
+{% endblock %}
+
+{% block content %}
+  <div class="container py-5">
+    {% for author in authors %}
+
+    <p>
+      <a href="{% url 'posts:profile' author.username %}">
+        {{ author.username }}
+      </a>
+    </p>
+
+    {% endfor %}
+  </div>
+{% endblock %}

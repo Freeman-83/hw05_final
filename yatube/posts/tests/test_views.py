@@ -98,6 +98,8 @@ class PostPagesTests(TestCase):
             'posts/create_post.html',
             reverse('posts:post_edit', kwargs={'post_id': self.post.id}):
             'posts/create_post.html',
+            reverse('posts:groups_info'): 'posts/groups_info.html',
+            reverse('posts:authors_info'): 'posts/authors_info.html',
         }
         for name, template in reverse_names_templates.items():
             with self.subTest(name=name):
@@ -210,6 +212,24 @@ class PostPagesTests(TestCase):
                          obj,
                          f'Страница группы {self.group}'
                          ' должна содержать записи только этой группы')
+        
+    def test_correct_delete_post(self):
+        """Проверка удаления поста
+        на главной, групповой, пользовательской страницах
+        """
+        reverse_names = [
+            reverse('posts:index'),
+            reverse('posts:group_list', kwargs={'slug': self.group.slug}),
+            reverse('posts:profile', kwargs={'username': self.post.author})
+        ]
+        self.post.delete()
+
+        for name in reverse_names:
+            response = PostPagesTests.auth_client.get(name)
+            obj = response.context['page_obj']
+            self.assertNotIn(self.post,
+                             obj,
+                             'Ошибка удаления поста')
 
     def test_cache(self):
         """Проверка корректного кэширования данных главной страницы."""
