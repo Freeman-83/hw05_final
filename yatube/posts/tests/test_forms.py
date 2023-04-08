@@ -19,6 +19,8 @@ class PostCreateFormTests(TestCase):
     def setUpClass(cls):
         super().setUpClass()
 
+        cls.guest_client = Client()
+
         cls.user = User.objects.create_user(username='auth_user')
         cls.author = User.objects.create_user(username='author')
 
@@ -63,7 +65,7 @@ class PostCreateFormTests(TestCase):
             'group': self.group.id,
             'image': self.uploaded
         }
-        PostCreateFormTests.auth_client_author.post(
+        response = PostCreateFormTests.auth_client_author.post(
             reverse('posts:post_create'),
             data=form_data,
             follow=True
@@ -79,8 +81,10 @@ class PostCreateFormTests(TestCase):
             with self.subTest(field=field):
                 self.assertEqual(field, expected, 'Новая запись не создана')
 
+        self.assertRedirects(response, f'/profile/{new_post.author}/')
+
     def test_edit_post(self):
-        """Проверка изменения поста."""
+        """Проверка редактирования поста."""
         post = Post.objects.create(
             text='Тестовый текст поста',
             author=PostCreateFormTests.author,
@@ -96,7 +100,7 @@ class PostCreateFormTests(TestCase):
             'group': new_group.id,
             'image': self.uploaded
         }
-        PostCreateFormTests.auth_client_author.post(
+        response = PostCreateFormTests.auth_client_author.post(
             reverse('posts:post_edit', kwargs={'post_id': post.id}),
             data=form_data,
             follow=True
@@ -111,6 +115,8 @@ class PostCreateFormTests(TestCase):
         for field, expected in posts_fields.items():
             with self.subTest(field=field):
                 self.assertEqual(field, expected, 'Запись не изменена')
+
+        self.assertRedirects(response, f'/posts/{changed_post.id}/')
 
     def test_denied_edit_for_not_author(self):
         """Проверка запрета на редактирования поста для неавтора"""

@@ -30,6 +30,8 @@ ALLOWED_HOSTS = [
     '127.0.0.1',
     '[::1]',
     'testserver',
+    'www.Freeman83.pythonanywhere.com',
+    'Freeman83.pythonanywhere.com'
 ]
 
 # Application definition

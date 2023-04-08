@@ -230,7 +230,7 @@ class PostPagesTests(TestCase):
             reverse('posts:group_list', kwargs={'slug': self.group.slug}),
             reverse('posts:profile', kwargs={'username': self.post.author})
         ]
-        response = PostPagesTests.auth_client_author.get(
+        response_to_del = PostPagesTests.auth_client_author.get(
             reverse('posts:post_delete', kwargs={'post_id': self.post.id})
         )
 
@@ -240,6 +240,8 @@ class PostPagesTests(TestCase):
             self.assertNotIn(self.post,
                              obj,
                              'Ошибка удаления поста')
+
+        self.assertRedirects(response_to_del, f'/profile/{self.post.author}/')
 
     def test_denied_delete_post_for_not_author(self):
         """Проверка запрета на удаление поста для неавтора"""

@@ -22,7 +22,7 @@ class PostModelTest(TestCase):
         )
 
     def test_models_have_correct_object_names(self):
-        """Проверка корректности работы __str__ в моделях."""
+        """Проверка корректности работы __str__."""
         post = PostModelTest.post
         group = PostModelTest.group
         expected_object_names = {
