@@ -7,29 +7,19 @@
 {% block content %}
 
   <div class="container py-5">
-    <h4>Все авторы</h4>
-    {% for author in authors %}
+    <h3>Все авторы</h3>
+    <hr>
+    {% for author in all_authors %}
       <p>
         <a href="{% url 'posts:profile' author.username %}">
           {{ author.get_full_name }}
         </a>
+        <br>Всего постов: {{ author.posts.count }}
+        <br>Всего подписчиков: {{ author.following.count }}
+        <br>Всего подписок: {{ author.follower.count }}
       </p>
+      {% if not forloop.last %}<hr>{% endif %}
     {% endfor %}
-  </div>
+  </div>  
   
-  <div class="container py-5">
-    <h4>Избранные авторы</h4>
-    
-      {% for author in authors %}
-        {% if author.following.user == request.user %}
-          <p>
-            <a href="{% url 'posts:profile' author.username %}">
-              {{ author.get_full_name }}
-            </a>
-          </p>
-        {% endif %}
-      {% endfor %}
-    
-  </div>
-
 {% endblock %}

@@ -1,6 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import cache_page
 from .models import Follow, Group, Post, User
 from .forms import CommentForm, PostForm
 from utils.paginator import get_paginator
@@ -42,10 +41,10 @@ def groups_info(request):
 
 def authors_info(request):
     template = 'posts/authors_info.html'
-    authors = User.objects.all()
+    all_authors = User.objects.all()
     context = {
         'title': 'Все авторы',
-        'authors': authors,
+        'all_authors': all_authors,
     }
     return render(request, template, context)
 
@@ -53,6 +52,8 @@ def authors_info(request):
 def profile(request, username):
     template = 'posts/profile.html'
     author = get_object_or_404(User, username=username)
+    my_followings = User.objects.filter(following__user=author)
+    my_followers = User.objects.filter(follower__author=author)
     posts = author.posts.select_related('author', 'group').all()
     page_obj = get_paginator(request, posts)
     following = (request.user.is_authenticated
@@ -60,8 +61,10 @@ def profile(request, username):
                                            author=author).exists())
     context = {
         'author': author,
+        'my_followings': my_followings,
+        'my_followers': my_followers,
         'page_obj': page_obj,
-        'following': following
+        'following': following,
     }
     return render(request, template, context)
 

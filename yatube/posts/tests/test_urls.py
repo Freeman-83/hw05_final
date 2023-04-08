@@ -44,26 +44,35 @@ class PostURLTests(TestCase):
              [f'/posts/{self.post.id}/', HTTPStatus.OK],
              ['/create/', HTTPStatus.FOUND],
              [f'/posts/{self.post.id}/edit/', HTTPStatus.FOUND],
-             [f'/posts/{self.post.id}/comment/', HTTPStatus.FOUND],
              [f'/posts/{self.post.id}/delete/', HTTPStatus.FOUND],
+             [f'/posts/{self.post.id}/comment/', HTTPStatus.FOUND],
+             ['/follow/', HTTPStatus.FOUND],
+             [f'/profile/{self.post.author}/follow/', HTTPStatus.FOUND],
+             [f'/profile/{self.post.author}/unfollow/', HTTPStatus.FOUND],
+             ['/authors/', HTTPStatus.OK],
+             ['/groups/', HTTPStatus.OK],
              ['/unexisting_page/', HTTPStatus.NOT_FOUND],),
             PostURLTests.auth_client:
             (['/create/', HTTPStatus.OK],
              [f'/posts/{self.post.id}/edit/', HTTPStatus.FOUND],
-             [f'/posts/{self.post.id}/delete/', HTTPStatus.FOUND],),
+             [f'/posts/{self.post.id}/delete/', HTTPStatus.FOUND],
+             [f'/posts/{self.post.id}/comment/', HTTPStatus.FOUND],
+             ['/follow/', HTTPStatus.OK],
+             [f'/profile/{self.post.author}/follow/', HTTPStatus.FOUND],
+             [f'/profile/{self.post.author}/unfollow/', HTTPStatus.FOUND],),
             PostURLTests.auth_client_author:
             ([f'/posts/{self.post.id}/edit/', HTTPStatus.OK],
-             [f'/posts/{self.post.id}/delete/', HTTPStatus.FOUND],)
+             [f'/posts/{self.post.id}/delete/', HTTPStatus.FOUND],),
         }
 
         for client, url_response in users_urls_status.items():
-            with self.subTest(client=client):
-                for i in range(len(url_response)):
-                    response = client.get(url_response[i][0])
+            for url, response_status in url_response:
+                with self.subTest(url=url):
+                    response = client.get(url)
                     self.assertEqual(
                         response.status_code,
-                        url_response[i][1],
-                        (f'Статус запроса страницы {url_response[i][0]}'
+                        response_status,
+                        (f'Статус запроса страницы {url}'
                          ' не соответствует ожидаемому')
                     )
 
@@ -75,17 +84,23 @@ class PostURLTests(TestCase):
         urls_redirect = [
             '/create/',
             f'/posts/{self.post.id}/edit/',
-            f'/posts/{self.post.id}/comment/',
             f'/posts/{self.post.id}/delete/',
+            f'/posts/{self.post.id}/comment/',
+            f'/profile/{self.post.author}/follow/',
+            f'/profile/{self.post.author}/unfollow/',
         ]
 
         for url in urls_redirect:
             response = PostURLTests.guest_client.get(url, follow=True)
             self.assertRedirects(response, f'/auth/login/?next={url}')
 
-        for url in urls_redirect[1:]:
+        for url in urls_redirect[1:4]:
             response = PostURLTests.auth_client.get(url, follow=True)
             self.assertRedirects(response, f'/posts/{self.post.id}/')
+
+        for url in urls_redirect[4:]:
+            response = PostURLTests.auth_client.get(url, follow=True)
+            self.assertRedirects(response, f'/profile/{self.post.author}/')
 
     def test_URL_uses_correct_templates(self):
         """Проверка соответствия URL-адресов и шаблонов."""
@@ -97,6 +112,8 @@ class PostURLTests(TestCase):
             '/create/': 'posts/create_post.html',
             f'/posts/{self.post.id}/edit/': 'posts/create_post.html',
             '/follow/': 'posts/follow.html',
+            '/authors/': 'posts/authors_info.html',
+            '/groups/': 'posts/groups_info.html',
             '/unexisting_page/': 'core/404.html',
         }
 

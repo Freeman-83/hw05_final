@@ -20,8 +20,13 @@ class PostCreateFormTests(TestCase):
         super().setUpClass()
 
         cls.user = User.objects.create_user(username='auth_user')
+        cls.author = User.objects.create_user(username='author')
+
         cls.auth_client = Client()
         cls.auth_client.force_login(cls.user)
+
+        cls.auth_client_author = Client()
+        cls.auth_client_author.force_login(cls.author)
 
     @classmethod
     def tearDownClass(cls):
@@ -58,13 +63,11 @@ class PostCreateFormTests(TestCase):
             'group': self.group.id,
             'image': self.uploaded
         }
-
-        PostCreateFormTests.auth_client.post(
+        PostCreateFormTests.auth_client_author.post(
             reverse('posts:post_create'),
             data=form_data,
             follow=True
         )
-
         new_post = Post.objects.first()
         posts_fields = {
             new_post.text: form_data['text'],
@@ -80,7 +83,7 @@ class PostCreateFormTests(TestCase):
         """Проверка изменения поста."""
         post = Post.objects.create(
             text='Тестовый текст поста',
-            author=PostCreateFormTests.user,
+            author=PostCreateFormTests.author,
             group=self.group
         )
         new_group = Group.objects.create(
@@ -88,19 +91,16 @@ class PostCreateFormTests(TestCase):
             slug='test-slug-2',
             description='Тестовое описание группы 2'
         )
-
         form_data = {
             'text': 'Новый текст поста',
             'group': new_group.id,
             'image': self.uploaded
         }
-
-        PostCreateFormTests.auth_client.post(
+        PostCreateFormTests.auth_client_author.post(
             reverse('posts:post_edit', kwargs={'post_id': post.id}),
             data=form_data,
             follow=True
         )
-
         changed_post = Post.objects.latest('text', 'group', 'image')
         posts_fields = {
             changed_post.text: form_data['text'],
@@ -111,6 +111,41 @@ class PostCreateFormTests(TestCase):
         for field, expected in posts_fields.items():
             with self.subTest(field=field):
                 self.assertEqual(field, expected, 'Запись не изменена')
+
+    def test_denied_edit_for_not_author(self):
+        """Проверка запрета на редактирования поста для неавтора"""
+        post = Post.objects.create(
+            text='Тестовый текст поста',
+            author=PostCreateFormTests.author,
+            group=self.group
+        )
+        new_group = Group.objects.create(
+            title='Тестовая группа 2',
+            slug='test-slug-2',
+            description='Тестовое описание группы 2'
+        )
+        form_data = {
+            'text': 'Новый текст поста',
+            'group': new_group.id,
+            'image': self.uploaded
+        }
+        PostCreateFormTests.auth_client.post(
+            reverse('posts:post_edit', kwargs={'post_id': post.id}),
+            data=form_data,
+            follow=True
+        )
+        changed_post = Post.objects.latest('text', 'group', 'image')
+        posts_fields = {
+            changed_post.text: form_data['text'],
+            changed_post.group.id: form_data['group'],
+            changed_post.image: f'posts/{form_data["image"].name}'
+        }
+
+        for field, expected in posts_fields.items():
+            with self.subTest(field=field):
+                self.assertNotEqual(field,
+                                    expected,
+                                    'Ошибка запрета изменения записи')
 
 
 class CommentCreateFormTests(TestCase):

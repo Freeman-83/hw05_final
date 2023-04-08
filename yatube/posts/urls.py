@@ -21,6 +21,6 @@ urlpatterns = [
     path('profile/<username>/unfollow/',
          views.profile_unfollow,
          name='profile_unfollow'),
-    path('groups/', views.groups_info, name='groups_info'),
     path('authors/', views.authors_info, name='authors_info'),
+    path('groups/', views.groups_info, name='groups_info'),
 ]

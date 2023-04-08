@@ -26,8 +26,13 @@ class PostPagesTests(TestCase):
         super().setUpClass()
 
         cls.user = User.objects.create_user(username='auth_user')
+        cls.author = User.objects.create_user(username='author')
+
         cls.auth_client = Client()
         cls.auth_client.force_login(cls.user)
+
+        cls.auth_client_author = Client()
+        cls.auth_client_author.force_login(cls.author)
 
     @classmethod
     def tearDownClass(cls):
@@ -54,7 +59,7 @@ class PostPagesTests(TestCase):
         )
         self.post = Post.objects.create(
             text='Тестовый текст поста',
-            author=PostPagesTests.user,
+            author=PostPagesTests.author,
             group=self.group,
             image=self.uploaded
         )
@@ -98,12 +103,13 @@ class PostPagesTests(TestCase):
             'posts/create_post.html',
             reverse('posts:post_edit', kwargs={'post_id': self.post.id}):
             'posts/create_post.html',
+            reverse('posts:follow_index'): 'posts/follow.html',
             reverse('posts:groups_info'): 'posts/groups_info.html',
             reverse('posts:authors_info'): 'posts/authors_info.html',
         }
         for name, template in reverse_names_templates.items():
             with self.subTest(name=name):
-                response = PostPagesTests.auth_client.get(name)
+                response = PostPagesTests.auth_client_author.get(name)
                 self.assertTemplateUsed(
                     response,
                     template,
@@ -112,13 +118,15 @@ class PostPagesTests(TestCase):
 
     def test_home_page_correct_context(self):
         """Проверка словаря контекста главной страницы."""
-        response = PostPagesTests.auth_client.get(reverse('posts:index'))
+        response = PostPagesTests.auth_client_author.get(
+            reverse('posts:index')
+        )
         obj = response.context['page_obj'][0]
         self.get_comparison_post_context(obj)
 
     def test_group_list_correct_context(self):
         """Проверка словаря контекста страницы группы."""
-        response = PostPagesTests.auth_client.get(
+        response = PostPagesTests.auth_client_author.get(
             reverse('posts:group_list', kwargs={'slug': self.group.slug})
         )
         obj_group = response.context['group']
@@ -131,7 +139,7 @@ class PostPagesTests(TestCase):
 
     def test_profile_correct_context(self):
         """Проверка словаря контекста страницы пользователя."""
-        response = PostPagesTests.auth_client.get(
+        response = PostPagesTests.auth_client_author.get(
             reverse('posts:profile', kwargs={'username': self.post.author})
         )
         obj_author = response.context['author']
@@ -144,7 +152,7 @@ class PostPagesTests(TestCase):
 
     def test_post_detail_correct_context(self):
         """Проверка словаря контекста страницы поста."""
-        response = PostPagesTests.auth_client.get(
+        response = PostPagesTests.auth_client_author.get(
             reverse('posts:post_detail', kwargs={'post_id': self.post.id})
         )
         obj_post_choice = response.context['post_choice']
@@ -160,7 +168,7 @@ class PostPagesTests(TestCase):
         ]
 
         for name in reverse_names:
-            response = PostPagesTests.auth_client.get(name)
+            response = PostPagesTests.auth_client_author.get(name)
             form_fields = {
                 'text': forms.fields.CharField,
                 'group': forms.fields.ChoiceField,
@@ -188,7 +196,7 @@ class PostPagesTests(TestCase):
         ]
 
         for name in reverse_names:
-            response = PostPagesTests.auth_client.get(name)
+            response = PostPagesTests.auth_client_author.get(name)
             obj = response.context['page_obj']
             self.assertIn(self.post,
                           obj,
@@ -204,7 +212,7 @@ class PostPagesTests(TestCase):
             author=PostPagesTests.user
         )
 
-        response = PostPagesTests.auth_client.get(
+        response = PostPagesTests.auth_client_author.get(
             reverse('posts:group_list', kwargs={'slug': self.group.slug})
         )
         obj = response.context['page_obj']
@@ -212,7 +220,7 @@ class PostPagesTests(TestCase):
                          obj,
                          f'Страница группы {self.group}'
                          ' должна содержать записи только этой группы')
-        
+
     def test_correct_delete_post(self):
         """Проверка удаления поста
         на главной, групповой, пользовательской страницах
@@ -222,23 +230,38 @@ class PostPagesTests(TestCase):
             reverse('posts:group_list', kwargs={'slug': self.group.slug}),
             reverse('posts:profile', kwargs={'username': self.post.author})
         ]
-        self.post.delete()
+        response = PostPagesTests.auth_client_author.get(
+            reverse('posts:post_delete', kwargs={'post_id': self.post.id})
+        )
 
         for name in reverse_names:
-            response = PostPagesTests.auth_client.get(name)
+            response = PostPagesTests.auth_client_author.get(name)
             obj = response.context['page_obj']
             self.assertNotIn(self.post,
                              obj,
                              'Ошибка удаления поста')
 
+    def test_denied_delete_post_for_not_author(self):
+        """Проверка запрета на удаление поста для неавтора"""
+        response = PostPagesTests.auth_client.get(
+            reverse('posts:post_delete', kwargs={'post_id': self.post.id})
+        )
+        response = PostPagesTests.auth_client.get(
+            reverse('posts:index')
+        )
+        obj = response.context['page_obj']
+        self.assertIn(self.post,
+                      obj,
+                      'Ошибка удаления поста неавтором')
+
     def test_cache(self):
         """Проверка корректного кэширования данных главной страницы."""
-        response_before_del = PostPagesTests.auth_client.get(
+        response_before_del = PostPagesTests.auth_client_author.get(
             reverse('posts:index')
         )
         response_before_del.context['page_obj'][0].delete()
 
-        response_after_del = PostPagesTests.auth_client.get(
+        response_after_del = PostPagesTests.auth_client_author.get(
             reverse('posts:index')
         )
         self.assertEqual(response_before_del.content,
@@ -247,7 +270,7 @@ class PostPagesTests(TestCase):
 
         cache.clear()
 
-        response_after_cache_clear = PostPagesTests.auth_client.get(
+        response_after_cache_clear = PostPagesTests.auth_client_author.get(
             reverse('posts:index')
         )
         self.assertNotEqual(response_before_del.content,
@@ -277,7 +300,30 @@ class FollowCreateTest(TestCase):
     def setUp(self):
         self.post = Post.objects.create(
             text='Тестовый текст',
-            author=FollowCreateTest.author)
+            author=FollowCreateTest.author
+        )
+
+    def test_follow_correct_context(self):
+        """Проверка словаря контекста подписки"""
+        FollowCreateTest.auth_client_1.get(
+            reverse('posts:profile_follow', kwargs={'username': self.author})
+        )
+        response = FollowCreateTest.auth_client_1.get(
+            reverse('posts:follow_index')
+        )
+        obj = response.context['page_obj'][0]
+
+        post_context = {obj.author: self.post.author,
+                        obj.pub_date: self.post.pub_date,
+                        obj.text: self.post.text,
+                        obj.pk: self.post.id,
+                        obj.group: self.post.group}
+
+        for value, expected in post_context.items():
+            with self.subTest(value=value):
+                self.assertEqual(value,
+                                 expected,
+                                 f'Значения {value} и {expected} не совпадают')
 
     def test_correct_follow_work(self):
         """Проверка подписки на автора."""

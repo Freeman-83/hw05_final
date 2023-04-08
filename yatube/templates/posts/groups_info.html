@@ -6,14 +6,16 @@
 
 {% block content %}
   <div class="container py-5">
+    <h3>{{ title }}</h3>
     {% for group in groups %}
-
-    <p>
-      <a href="{% url 'posts:group_list' group.slug %}">
-        {{ group.title }}
-      </a>
-    </p>
-
+      <p>
+        <a href="{% url 'posts:group_list' group.slug %}">
+          {{ group.title }}
+        </a>
+        <br>
+        Кодичество постов в группе: {{ group.posts.count }}
+      </p>
+      {% if not forloop.last %}<hr>{% endif %}
     {% endfor %}
   </div>
 {% endblock %}

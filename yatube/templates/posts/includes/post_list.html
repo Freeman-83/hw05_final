@@ -1,10 +1,14 @@
 {% load thumbnail %}
 
+{% with request.resolver_match.view_name as view_name %}
+
 <article>
   <ul>
-    <li>
-      Автор: {{ post.author.get_full_name }}
-    </li>
+    {% if view_name != 'posts:profile' %}
+      <li>
+        Автор: {{ post.author.get_full_name }}
+      </li>
+    {% endif %}
     <li>
       Дата публикации: {{ post.pub_date|date:"d E Y" }}
     </li>
@@ -19,3 +23,5 @@
     подробная информация
   </a>
 </article>
+
+{% endwith %}
