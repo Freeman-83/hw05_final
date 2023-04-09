@@ -15,7 +15,7 @@
         <h3>Всего постов: {{ author.posts.count }}</h3>
         <br>
 
-        <h4>Мои подписчики: {{ author.following.count }}</h4>
+        <h4>Подписчики: {{ author.following.count }}</h4>
           {% for follower in my_followers %}
             <a href="{% url 'posts:profile' follower.username %}">
               {{ follower.get_full_name }}
@@ -24,7 +24,7 @@
           {% endfor %}
           <br>
 
-        <h4>Мои подписки: {{ author.follower.count }}</h4>
+        <h4>Подписки: {{ author.follower.count }}</h4>
           {% for following in my_followings %}
             <a href="{% url 'posts:profile' following.username %}">
               {{ following.get_full_name }}
@@ -58,7 +58,7 @@
 
     <article class="col-12 col-md-9">
       <div class="container py-5">
-        <h3>Мои записи</h3>
+        <h3>Все записи автора</h3>
         <hr>
         {% for post in page_obj %}
           {% include 'posts/includes/post_list.html' %}
